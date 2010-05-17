@@ -29,12 +29,11 @@ class XMLGenerator(object):
         return self
 
     def element(self, name, attrs={}, text=u''):
-        bits = [u'<%s%s' % (name, attr_str(attrs))]
+        self.file.write(u'<%s%s' % (name, attr_str(attrs)))
         if text:
-            bits.append(u'>%s</%s>' % (escape(text), name))
+            self.file.write(u'>%s</%s>' % (escape(text), name))
         else:
-            bits.append(u'/>')
-        self.file.write(u''.join(bits))
+            self.file.write(u'/>')
 
     def text(self, value):
         self.file.write(escape(value))
