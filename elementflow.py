@@ -5,21 +5,46 @@ from xml.sax.saxutils import quoteattr, escape
 def attr_str(attrs):
     if not attrs:
         return u''
-    return u''.join(
-        u' %s=%s' % (k, quoteattr(v)) for k, v in attrs.iteritems()
-    )
+    return u''.join(u' %s=%s' % (k, quoteattr(v)) for k, v in attrs.iteritems())
 
 
 class XMLGenerator(object):
-    def __init__(self, file, root, attrs={}, namespaces={}):
+    def __init__(self, file, root, attrs={}, **kwargs):
         self.file = file
         self.file.write('<?xml version="1.0" encoding="utf-8"?>')
         self.stack = []
-        self.namespaces = [set(['xml'])]
-        self.container(root, attrs, namespaces)
+        self.container(root, attrs, **kwargs)
 
     def _write(self, value):
         self.file.write(value.encode('utf-8'))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        self._write(u'</%s>' % self.stack.pop())
+
+    def container(self, name, attrs={}):
+        self._write(u'<%s%s>' % (name, attr_str(attrs)))
+        self.stack.append(name)
+        return self
+
+    def element(self, name, attrs={}, text=u''):
+        bits = [u'<%s%s' % (name, attr_str(attrs))]
+        if text:
+            bits.append(u'>%s</%s>' % (escape(text), name))
+        else:
+            bits.append(u'/>')
+        self._write(u''.join(bits))
+
+    def text(self, value):
+        self._write(escape(value))
+
+
+class NamespacedGenerator(XMLGenerator):
+    def __init__(self, file, root, attrs={}, namespaces={}):
+        self.namespaces = [set(['xml'])]
+        super(NamespacedGenerator, self).__init__(file, root, attrs=attrs, namespaces=namespaces)
 
     def _process_namespaces(self, name, attrs, namespaces):
         prefixes = self.namespaces[-1]
@@ -35,34 +60,21 @@ class XMLGenerator(object):
                 (u'xmlns:%s' % k if k else u'xmlns', v)
                 for k, v in namespaces.iteritems()
             )
-            attrs = dict(attr, **namespaces)
+            attrs = dict(attrs, **namespaces)
         return attrs, prefixes
 
-    def __enter__(self):
-        return self
-
     def __exit__(self, exc_type, exc_value, exc_tb):
-        self._write(u'</%s>' % self.stack.pop())
+        super(NamespacedGenerator, self).__exit__(exc_type, exc_value, exc_tb)
         self.namespaces.pop()
 
     def container(self, name, attrs={}, namespaces={}):
         attrs, prefixes = self._process_namespaces(name, attrs, namespaces)
-        self._write(u'<%s%s>' % (name, attr_str(attrs)))
-        self.stack.append(name)
         self.namespaces.append(prefixes)
-        return self
+        return super(NamespacedGenerator, self).container(name, attrs)
 
     def element(self, name, attrs={}, namespaces={}, text=u''):
         attrs, prefixes = self._process_namespaces(name, attrs, namespaces)
-        bits = [u'<%s%s' % (name, attr_str(attrs))]
-        if text:
-            bits.append(u'>%s</%s>' % (escape(text), name))
-        else:
-            bits.append(u'/>')
-        self._write(u''.join(bits))
-
-    def text(self, text):
-        self._write(escape(text))
+        super(NamespacedGenerator, self).element(name, attrs, text)
 
 
 class Queue(object):
@@ -81,4 +93,8 @@ class Queue(object):
         return result
 
 
-xml = XMLGenerator
+def xml(file, root, attrs={}, namespaces={}):
+    if namespaces:
+        return NamespacedGenerator(file, root, attrs, namespaces)
+    else:
+        return XMLGenerator(file, root, attrs)
