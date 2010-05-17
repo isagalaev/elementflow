@@ -1,8 +1,16 @@
 # -*- coding:utf-8 -*-
-from xml.sax.saxutils import quoteattr, escape
 import textwrap
 import codecs
 
+def escape(value):
+    if '&' not in value and '<' not in value:
+        return value
+    return value.replace('&', '&amp;').replace('<', '&lt;')
+
+def quoteattr(value):
+    if '&' in value or '<' in value or '"' in value:
+        value = value.replace('&', '&amp;').replace('<', '&lt;').replace('"', '&quot;')
+    return u'"%s"' % value
 
 def attr_str(attrs):
     if not attrs:
