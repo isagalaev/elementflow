@@ -29,6 +29,8 @@ class XMLGenerator(object):
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
+        if exc_type:
+            return
         self.file.write(u'</%s>' % self.stack.pop())
 
     def container(self, name, attrs={}):

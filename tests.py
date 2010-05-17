@@ -28,6 +28,19 @@ class XML(unittest.TestCase):
           '</root>'
         )
 
+    def test_non_well_formed_on_exception(self):
+        buffer = StringIO()
+        try:
+            with elementflow.xml(buffer, u'root') as xml:
+                xml.text(u'Text')
+                raise Exception()
+        except:
+            pass
+        buffer.seek(0)
+        # Parsing this buffer should cause a parsing error due to unclosed
+        # root element
+        self.assertRaises(SyntaxError, lambda: ET.parse(buffer))
+
     def test_namespaces(self):
         buffer = StringIO()
         with elementflow.xml(buffer, 'root', namespaces={'': 'urn:n', 'n1': 'urn:n1'}) as xml:
