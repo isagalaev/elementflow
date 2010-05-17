@@ -22,17 +22,21 @@ class XMLGenerator(object):
         self.file.write(value.encode('utf-8'))
 
     def _process_namespaces(self, name, attrs, namespaces):
-        prefixes = self.namespaces[-1] | set(namespaces.keys())
+        prefixes = self.namespaces[-1]
+        if namespaces:
+            prefixes |= set(namespaces.keys())
         names = (n for n in [name] + attrs.keys() if ':' in n)
         for name in names:
             prefix = name.split(':')[0]
             if prefix not in prefixes:
                 raise ValueError('Unkown namespace prefix: %s' % prefix)
-        namespaces = dict(
-            (u'xmlns:%s' % k if k else u'xmlns', v)
-            for k, v in namespaces.iteritems()
-        )
-        return dict(attrs, **namespaces), prefixes
+        if namespaces:
+            namespaces = dict(
+                (u'xmlns:%s' % k if k else u'xmlns', v)
+                for k, v in namespaces.iteritems()
+            )
+            attrs = dict(attr, **namespaces)
+        return attrs, prefixes
 
     def __enter__(self):
         return self
