@@ -6,7 +6,7 @@ def attr_str(attrs):
     if not attrs:
         return u''
     return u''.join(
-        u' %s=%s' % (k, quoteattr(v)) for k, v in attrs.iteritems(),
+        u' %s=%s' % (k, quoteattr(v)) for k, v in attrs.iteritems()
     )
 
 def update_namespaces(attrs, namespaces):
