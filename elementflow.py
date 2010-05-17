@@ -7,7 +7,7 @@ import codecs
 def attr_str(attrs):
     if not attrs:
         return u''
-    return u''.join(u' %s=%s' % (k, quoteattr(v)) for k, v in attrs.iteritems())
+    return u''.join([u' %s=%s' % (k, quoteattr(v)) for k, v in attrs.iteritems()])
 
 
 class XMLGenerator(object):
