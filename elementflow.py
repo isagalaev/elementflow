@@ -43,4 +43,20 @@ class XMLGenerator(object):
         self._write(escape(text))
 
 
+class Queue(object):
+    def __init__(self):
+        self.data = bytearray()
+
+    def __len__(self):
+        return len(self.data)
+
+    def write(self, value):
+        self.data.extend(value)
+
+    def pop(self):
+        result = str(self.data)
+        self.data = bytearray()
+        return result
+
+
 xml = XMLGenerator

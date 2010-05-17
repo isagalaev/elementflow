@@ -4,6 +4,20 @@ import xml.etree.cElementTree as ET
 
 import elementflow
 
+def ef_iterator(count, bufsize):
+    with elementflow.xml(elementflow.Queue(), 'contacts') as xml:
+        for i in range(count):
+            with xml.container('person'):
+                xml.element('name', text='John Smith')
+                xml.element('email', text='john.smith@megacorp.com')
+                with xml.container('phones'):
+                    xml.element('phone', {'type': 'work'}, text='123456')
+                    xml.element('phone', {'type': 'home'}, text='123456')
+            if len(xml.file) > bufsize:
+                yield xml.file.pop()
+    yield xml.file.pop()
+
+
 def ef_generator(file, count):
     with elementflow.xml(file, 'contacts') as xml:
         for i in range(count):
