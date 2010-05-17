@@ -8,10 +8,11 @@ import elementflow
 class XML(unittest.TestCase):
     def test_xml(self):
         buffer = StringIO()
-        with elementflow.xml(buffer, 'root') as xml:
-            with xml.container('container'):
-                xml.element('item')
-            xml.element('item')
+        with elementflow.xml(buffer, u'root') as xml:
+            with xml.container(u'container', {u'key': u'"значение"'}):
+                xml.text(u'<Текст> контейнера')
+                xml.element(u'item')
+            xml.element(u'item', text=u'Текст')
         buffer.seek(0)
         tree = ET.parse(buffer)
         buffer = StringIO()
@@ -19,10 +20,11 @@ class XML(unittest.TestCase):
         self.assertEqual(
           buffer.getvalue(),
           '<root>'
-            '<container>'
+            '<container key="&quot;значение&quot;">'
+              '&lt;Текст&gt; контейнера'
               '<item />'
             '</container>'
-            '<item />'
+            '<item>Текст</item>'
           '</root>'
         )
 
