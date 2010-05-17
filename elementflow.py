@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 from xml.sax.saxutils import quoteattr, escape
+import textwrap
 
 
 def attr_str(attrs):
@@ -77,6 +78,36 @@ class NamespacedGenerator(XMLGenerator):
         super(NamespacedGenerator, self).element(name, attrs, text)
 
 
+class IndentingGenerator(NamespacedGenerator):
+    def _fill(self, value, indent=None):
+        if indent is None:
+            indent = u'  ' * len(self.stack)
+        width = max(20, 70 - len(indent))
+        tw = textwrap.TextWrapper(width=width, initial_indent=indent, subsequent_indent=indent)
+        return u'\n%s' % tw.fill(value)
+
+    def __exit__(self, *args, **kwargs):
+        self._write(u'\n%s' % (u'  ' * (len(self.stack) - 1)))
+        super(IndentingGenerator, self).__exit__(*args, **kwargs)
+        if not self.stack:
+            self._write(u'\n')
+
+    def container(self, *args, **kwargs):
+        self._write(u'\n%s' % (u'  ' * len(self.stack)))
+        return super(IndentingGenerator, self).container(*args, **kwargs)
+
+    def element(self, name, attrs={}, namespaces={}, text=u''):
+        indent = u'  ' * len(self.stack)
+        self._write(u'\n%s' % indent)
+        if len(text) > 70:
+            fill = self._fill(text, indent + u'  ')
+            text = u'%s\n%s' % (fill, indent)
+        return super(IndentingGenerator, self).element(name, attrs, namespaces, text)
+
+    def text(self, value):
+        super(IndentingGenerator, self).text(self._fill(value))
+
+
 class Queue(object):
     def __init__(self):
         self.data = bytearray()
@@ -93,8 +124,10 @@ class Queue(object):
         return result
 
 
-def xml(file, root, attrs={}, namespaces={}):
-    if namespaces:
+def xml(file, root, attrs={}, namespaces={}, indent=False):
+    if indent:
+        return IndentingGenerator(file, root, attrs, namespaces)
+    elif namespaces:
         return NamespacedGenerator(file, root, attrs, namespaces)
     else:
         return XMLGenerator(file, root, attrs)
