@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 from xml.sax.saxutils import quoteattr, escape
 import textwrap
+import codecs
 
 
 def attr_str(attrs):
@@ -11,22 +12,19 @@ def attr_str(attrs):
 
 class XMLGenerator(object):
     def __init__(self, file, root, attrs={}, **kwargs):
-        self.file = file
-        self.file.write('<?xml version="1.0" encoding="utf-8"?>')
+        self.file = codecs.getwriter('utf-8')(file)
+        self.file.write(u'<?xml version="1.0" encoding="utf-8"?>')
         self.stack = []
         self.container(root, attrs, **kwargs)
-
-    def _write(self, value):
-        self.file.write(value.encode('utf-8'))
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        self._write(u'</%s>' % self.stack.pop())
+        self.file.write(u'</%s>' % self.stack.pop())
 
     def container(self, name, attrs={}):
-        self._write(u'<%s%s>' % (name, attr_str(attrs)))
+        self.file.write(u'<%s%s>' % (name, attr_str(attrs)))
         self.stack.append(name)
         return self
 
@@ -36,10 +34,10 @@ class XMLGenerator(object):
             bits.append(u'>%s</%s>' % (escape(text), name))
         else:
             bits.append(u'/>')
-        self._write(u''.join(bits))
+        self.file.write(u''.join(bits))
 
     def text(self, value):
-        self._write(escape(value))
+        self.file.write(escape(value))
 
 
 class NamespacedGenerator(XMLGenerator):
@@ -87,18 +85,18 @@ class IndentingGenerator(NamespacedGenerator):
         return u'\n%s' % tw.fill(value)
 
     def __exit__(self, *args, **kwargs):
-        self._write(u'\n%s' % (u'  ' * (len(self.stack) - 1)))
+        self.file.write(u'\n%s' % (u'  ' * (len(self.stack) - 1)))
         super(IndentingGenerator, self).__exit__(*args, **kwargs)
         if not self.stack:
-            self._write(u'\n')
+            self.file.write(u'\n')
 
     def container(self, *args, **kwargs):
-        self._write(u'\n%s' % (u'  ' * len(self.stack)))
+        self.file.write(u'\n%s' % (u'  ' * len(self.stack)))
         return super(IndentingGenerator, self).container(*args, **kwargs)
 
     def element(self, name, attrs={}, namespaces={}, text=u''):
         indent = u'  ' * len(self.stack)
-        self._write(u'\n%s' % indent)
+        self.file.write(u'\n%s' % indent)
         if len(text) > 70:
             fill = self._fill(text, indent + u'  ')
             text = u'%s\n%s' % (fill, indent)

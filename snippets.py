@@ -19,11 +19,10 @@ def ef_iterator(count, bufsize):
 
 
 def ef_generator(file, count):
-    with elementflow.xml(file, 'contacts', indent=True) as xml:
+    with elementflow.xml(file, 'contacts') as xml:
         for i in range(count):
             with xml.container('person'):
-                xml.text('Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio Bio ')
-                xml.element('name', text='John Smith John Smith John Smith John Smith John Smith John Smith John Smith John Smith John Smith ')
+                xml.element('name', text='John Smith')
                 xml.element('email', text='john.smith@megacorp.com')
                 with xml.container('phones'):
                     xml.element('phone', {'type': 'work'}, text='123456')
@@ -42,4 +41,4 @@ def et_generator(file, count):
 
 
 if __name__ == '__main__':
-    ef_generator(sys.stdout, 1)
+    ef_generator(sys.stdout, 40000)
