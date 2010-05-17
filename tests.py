@@ -36,13 +36,23 @@ class XML(unittest.TestCase):
                 xml.element('item')
                 xml.element('n1:item')
         buffer.seek(0)
-        print buffer.getvalue()
         tree = ET.parse(buffer)
         root = tree.getroot()
         self.assertEquals(root.tag, '{urn:n}root')
         self.assertNotEqual(root.find('{urn:n}item'), None)
         self.assertNotEqual(root.find('{urn:n2}item/{urn:n}item'), None)
         self.assertNotEqual(root.find('{urn:n2}item/{urn:n1}item'), None)
+
+    def test_bad_namespace(self):
+        buffer = StringIO()
+        def g():
+            with elementflow.xml(buffer, 'n1:root', namespaces={'n': 'urn:n'}) as xml:
+                pass
+        self.assertRaises(ValueError, g)
+        def g():
+            with elementflow.xml(buffer, 'n:root', attrs={'n1:k': 'v'}, namespaces={'n': 'urn:n'}) as xml:
+                pass
+        self.assertRaises(ValueError, g)
 
 
 if __name__ == '__main__':

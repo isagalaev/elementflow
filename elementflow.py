@@ -9,39 +9,47 @@ def attr_str(attrs):
         u' %s=%s' % (k, quoteattr(v)) for k, v in attrs.iteritems()
     )
 
-def update_namespaces(attrs, namespaces):
-    namespaces = dict(
-        (u'xmlns' if not k else u'xmlns:%s' % k, v)
-        for k, v in namespaces.iteritems()
-    )
-    return dict(attrs, **namespaces)
-
-
 
 class XMLGenerator(object):
     def __init__(self, file, root, attrs={}, namespaces={}):
         self.file = file
         self.file.write('<?xml version="1.0" encoding="utf-8"?>')
         self.stack = []
+        self.namespaces = [set(['xml'])]
         self.container(root, attrs, namespaces)
 
     def _write(self, value):
         self.file.write(value.encode('utf-8'))
+
+    def _process_namespaces(self, name, attrs, namespaces):
+        prefixes = self.namespaces[-1] | set(namespaces.keys())
+        names = (n for n in [name] + attrs.keys() if ':' in n)
+        for name in names:
+            prefix = name.split(':')[0]
+            if prefix not in prefixes:
+                raise ValueError('Unkown namespace prefix: %s' % prefix)
+        namespaces = dict(
+            (u'xmlns:%s' % k if k else u'xmlns', v)
+            for k, v in namespaces.iteritems()
+        )
+        return dict(attrs, **namespaces), prefixes
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         self._write(u'</%s>' % self.stack.pop())
+        self.namespaces.pop()
 
     def container(self, name, attrs={}, namespaces={}):
-        attrs = update_namespaces(attrs, namespaces)
+        attrs, prefixes = self._process_namespaces(name, attrs, namespaces)
         self._write(u'<%s%s>' % (name, attr_str(attrs)))
         self.stack.append(name)
+        self.namespaces.append(prefixes)
         return self
 
     def element(self, name, attrs={}, namespaces={}, text=u''):
-        attrs = update_namespaces(attrs, namespaces)
+        attrs, prefixes = self._process_namespaces(name, attrs, namespaces)
         bits = [u'<%s%s' % (name, attr_str(attrs))]
         if text:
             bits.append(u'>%s</%s>' % (escape(text), name))
