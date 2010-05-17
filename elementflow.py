@@ -3,6 +3,8 @@ from xml.sax.saxutils import quoteattr, escape
 
 
 def attr_str(attrs):
+    if not attrs:
+        return u''
     return u''.join(
         u' %s=%s' % (k, quoteattr(v)) for k, v in attrs.iteritems(),
     )
