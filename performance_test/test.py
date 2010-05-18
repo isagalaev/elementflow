@@ -1,22 +1,9 @@
 # -*- coding:utf-8 -*-
 import sys
 import xml.etree.cElementTree as ET
+from datetime import datetime
 
 import elementflow
-
-def ef_iterator(count, bufsize):
-    with elementflow.xml(elementflow.Queue(), 'contacts') as xml:
-        for i in range(count):
-            with xml.container('person', {'id': unicode(i)}):
-                xml.element('name', text='John & Smith')
-                xml.element('email', text='john.smith@megacorp.com')
-                with xml.container('phones'):
-                    xml.element('phone', {'type': 'work'}, text='123456')
-                    xml.element('phone', {'type': 'home'}, text='123456')
-            if len(xml.file) > bufsize:
-                yield xml.file.pop()
-    yield xml.file.pop()
-
 
 def ef_generator(file, count):
     with elementflow.xml(file, 'contacts') as xml:
@@ -41,4 +28,6 @@ def et_generator(file, count):
 
 
 if __name__ == '__main__':
-    ef_generator(sys.stdout, 40000)
+    start = datetime.now()
+    ef_generator(open('/dev/null', 'w'), 40000)
+    print datetime.now() - start
