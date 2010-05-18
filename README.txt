@@ -28,7 +28,7 @@ Basic XML generation::
 Using ``with`` is required to properly close container elements. The library
 expects unicode strings on input and produces utf-8 encoded output (you *may*
 omit those "u"s for purely ASCII strings if you want to, Python will convert
-the, automatically).
+them automatically).
 
 XML with namespaces::
 
