@@ -1,4 +1,32 @@
 # -*- coding:utf-8 -*-
+'''
+Library for generating XML as a stream without first building a tree in memory.
+
+Basic usage::
+
+    import elementflow
+    file = open('text.xml', 'w') # can be any  object with .write() method
+
+    with elementflow.xml(file, u'root') as xml:
+        xml.element(u'item', attrs={u'key': u'value'}, text=u'text')
+        with xml.container(u'container', attrs={u'key': u'value'}):
+            xml.text(u'text')
+            xml.element(u'subelement', text=u'subelement text')
+
+Usage with namespaces::
+
+    with elementflow.xml(file, 'root', namespaces={'': 'urn:n', 'n1': 'urn:n1'}) as xml:
+        xml.element('item')
+        with xml.container('container', namespaces={'n2': 'urn:n2'):
+            xml.element('n1:subelement')
+            xml.element('n2:subelement')
+
+Pretty-printing::
+
+    with elementflow.xml(file, 'root', indent=True):
+        # ...
+
+'''
 import textwrap
 import codecs
 
@@ -19,6 +47,18 @@ def attr_str(attrs):
 
 
 class XMLGenerator(object):
+    '''
+    Basic generator without support for namespaces or pretty-printing.
+
+    Constructor accepts:
+
+    - file: an object receiving XML output, anything with .write()
+    - root: name of the root element
+    - attrs: attributes dict
+
+    Constructor will implicitly open a root container element, you don't need
+    to call .container() for it
+    '''
     def __init__(self, file, root, attrs={}, **kwargs):
         self.file = codecs.getwriter('utf-8')(file)
         self.file.write(u'<?xml version="1.0" encoding="utf-8"?>')
@@ -34,21 +74,34 @@ class XMLGenerator(object):
         self.file.write(u'</%s>' % self.stack.pop())
 
     def container(self, name, attrs={}):
+        '''
+        Opens a new element containing sub-elements and text nodes.
+        Intends to be used under ``with`` statement.
+        '''
         self.file.write(u'<%s%s>' % (name, attr_str(attrs)))
         self.stack.append(name)
         return self
 
     def element(self, name, attrs={}, text=u''):
+        '''
+        Generates a single element, either empty or with a text contents.
+        '''
         if text:
             self.file.write(u'<%s%s>%s</%s>' % (name, attr_str(attrs), escape(text), name))
         else:
             self.file.write(u'<%s%s/>' % (name, attr_str(attrs)))
 
     def text(self, value):
+        '''
+        Generates a text in currently open container.
+        '''
         self.file.write(escape(value))
 
 
 class NamespacedGenerator(XMLGenerator):
+    '''
+    XML generator with support for namespaces.
+    '''
     def __init__(self, file, root, attrs={}, namespaces={}):
         self.namespaces = [set(['xml'])]
         super(NamespacedGenerator, self).__init__(file, root, attrs=attrs, namespaces=namespaces)
@@ -85,6 +138,9 @@ class NamespacedGenerator(XMLGenerator):
 
 
 class IndentingGenerator(NamespacedGenerator):
+    '''
+    XML generator with pretty-printing.
+    '''
     def _fill(self, value, indent=None):
         if indent is None:
             indent = u'  ' * len(self.stack)
@@ -115,6 +171,9 @@ class IndentingGenerator(NamespacedGenerator):
 
 
 class Queue(object):
+    '''
+    In-memory queue for using as a temporary buffer in xml generator.
+    '''
     def __init__(self):
         self.data = bytearray()
 
@@ -131,6 +190,17 @@ class Queue(object):
 
 
 def xml(file, root, attrs={}, namespaces={}, indent=False):
+    '''
+    Creates a streaming XML generator.
+
+    Parameters:
+
+    - file: an object receiving XML output, anything with .write()
+    - root: name of the root element
+    - attrs: attributes dict
+    - namespaces: namespaces dict {prefix: uri}, default namespace has prefix ''
+    - indent: whether to pretty-print XML, True or False (default)
+    '''
     if indent:
         return IndentingGenerator(file, root, attrs, namespaces)
     elif namespaces:
