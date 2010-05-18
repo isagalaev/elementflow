@@ -7,7 +7,7 @@ import elementflow
 def ef_iterator(count, bufsize):
     with elementflow.xml(elementflow.Queue(), 'contacts') as xml:
         for i in range(count):
-            with xml.container('person'):
+            with xml.container('person', {'id': unicode(i)}):
                 xml.element('name', text='John & Smith')
                 xml.element('email', text='john.smith@megacorp.com')
                 with xml.container('phones'):
@@ -21,7 +21,7 @@ def ef_iterator(count, bufsize):
 def ef_generator(file, count):
     with elementflow.xml(file, 'contacts') as xml:
         for i in range(count):
-            with xml.container('person'):
+            with xml.container('person', {'id': unicode(i)}):
                 xml.element('name', text='John & Smith')
                 xml.element('email', text='john.smith@megacorp.com')
                 with xml.container('phones'):
@@ -31,7 +31,7 @@ def ef_generator(file, count):
 def et_generator(file, count):
     root = ET.Element('contacts')
     for i in range(count):
-        person = ET.SubElement(root, 'person')
+        person = ET.SubElement(root, 'person', {'id': unicode(i)})
         ET.SubElement(person, 'name').text = 'John & Smith'
         ET.SubElement(person, 'email').text = 'john.smith@megacorp.com'
         phones = ET.SubElement(person, 'phones')
