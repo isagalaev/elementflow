@@ -57,16 +57,16 @@ class NamespacedGenerator(XMLGenerator):
         prefixes = self.namespaces[-1]
         if namespaces:
             prefixes |= set(namespaces.keys())
-        names = (n for n in [name] + attrs.keys() if ':' in n)
+        names = [n for n in [name] + attrs.keys() if ':' in n]
         for name in names:
             prefix = name.split(':')[0]
             if prefix not in prefixes:
                 raise ValueError('Unkown namespace prefix: %s' % prefix)
         if namespaces:
-            namespaces = dict(
+            namespaces = dict([
                 (u'xmlns:%s' % k if k else u'xmlns', v)
                 for k, v in namespaces.iteritems()
-            )
+            ])
             attrs = dict(attrs, **namespaces)
         return attrs, prefixes
 
