@@ -97,6 +97,15 @@ class XMLGenerator(object):
         '''
         self.file.write(escape(value))
 
+    def map(self, func, sequence):
+        '''
+        Convenience function for translating a sequence of objects into xml elements.
+        First parameter is a function that accepts an object from the sequence and
+        return a tuple of arguments for "element" method.
+        '''
+        for item in sequence:
+            self.element(*func(item))
+
 
 class NamespacedGenerator(XMLGenerator):
     '''
