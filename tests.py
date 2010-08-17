@@ -67,6 +67,30 @@ class XML(unittest.TestCase):
                 pass
         self.assertRaises(ValueError, g)
 
+    def test_map(self):
+        data = [(1, u'One'), (2, u'Two'), (3, u'Three')]
+        buffer = StringIO()
+        with elementflow.xml(buffer, u'root') as xml:
+            xml.map(lambda (k, v): (
+                'item',
+                {'key': unicode(k)},
+                v,
+            ), data)
+            xml.map(lambda (k, v): (v,), data)
+        buffer.seek(0)
+        tree = ET.parse(buffer)
+        buffer = StringIO()
+        tree.write(buffer, encoding='utf-8')
+        self.assertEqual(
+          buffer.getvalue(),
+          '<root>'
+            '<item key="1">One</item>'
+            '<item key="2">Two</item>'
+            '<item key="3">Three</item>'
+            '<One /><Two /><Three />'
+          '</root>'
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
