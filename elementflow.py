@@ -150,12 +150,17 @@ class IndentingGenerator(NamespacedGenerator):
     '''
     XML generator with pretty-printing.
     '''
+    def __init__(self, *args, **kwargs):
+        self._text_wrap = kwargs.pop('text_wrap', True)
+        super(IndentingGenerator, self).__init__(*args, **kwargs)
+
     def _fill(self, value, indent=None):
         if indent is None:
             indent = u'  ' * len(self.stack)
         width = max(20, 70 - len(indent))
         tw = textwrap.TextWrapper(width=width, initial_indent=indent, subsequent_indent=indent)
-        return u'\n%s' % tw.fill(value)
+        value = u'\n%s' % tw.fill(value)
+        return value
 
     def __exit__(self, *args, **kwargs):
         self.file.write(u'\n%s' % (u'  ' * (len(self.stack) - 1)))
@@ -170,7 +175,7 @@ class IndentingGenerator(NamespacedGenerator):
     def element(self, name, attrs={}, namespaces={}, text=u''):
         indent = u'  ' * len(self.stack)
         self.file.write(u'\n%s' % indent)
-        if len(text) > 70:
+        if len(text) > 70 and self._text_wrap:
             fill = self._fill(text, indent + u'  ')
             text = u'%s\n%s' % (fill, indent)
         return super(IndentingGenerator, self).element(name, attrs, namespaces, text)
@@ -198,7 +203,7 @@ class Queue(object):
         return result
 
 
-def xml(file, root, attrs={}, namespaces={}, indent=False):
+def xml(file, root, attrs={}, namespaces={}, indent=False, text_wrap=True):
     '''
     Creates a streaming XML generator.
 
@@ -211,7 +216,7 @@ def xml(file, root, attrs={}, namespaces={}, indent=False):
     - indent: whether to pretty-print XML, True or False (default)
     '''
     if indent:
-        return IndentingGenerator(file, root, attrs, namespaces)
+        return IndentingGenerator(file, root, attrs, namespaces, text_wrap=text_wrap)
     elif namespaces:
         return NamespacedGenerator(file, root, attrs, namespaces)
     else:

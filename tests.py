@@ -1,4 +1,6 @@
 # -*- coding:utf-8 -*-
+from __future__ import with_statement
+
 import unittest
 from cStringIO import StringIO
 import xml.etree.cElementTree as ET
@@ -90,6 +92,42 @@ class XML(unittest.TestCase):
             '<One /><Two /><Three />'
           '</root>'
         )
+
+    def test_indent(self):
+        buffer = StringIO()
+        with elementflow.xml(buffer, u'root', indent = True) as xml:
+            with xml.container(u'a'):
+                xml.element(u'b', text = ''.join(['blah '] * 20))
+        buffer.seek(0)
+        self.assertEqual(
+            buffer.getvalue(),
+"""<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <a>
+    <b>
+      blah blah blah blah blah blah blah blah blah blah blah
+      blah blah blah blah blah blah blah blah blah
+    </b>
+  </a>
+</root>
+""")
+
+    def test_indent_nowrap(self):
+        buffer = StringIO()
+        with elementflow.xml(buffer, u'root', indent = True, text_wrap = False) as xml:
+            with xml.container(u'a'):
+                xml.element(u'b', text = ''.join(['blah '] * 20))
+        buffer.seek(0)
+        self.assertEqual(
+            buffer.getvalue(),
+"""<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <a>
+    <b>blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah </b>
+  </a>
+</root>
+""")
+
 
 
 if __name__ == '__main__':
