@@ -56,7 +56,7 @@ function::
         with xml:
             for item in collection:
                 xml.element(...)
-            yield xml.file.pop()
+                yield xml.file.pop()
         yield xml.file.pop()
 
 ``elementflow.Queue()`` is a temporary buffer that accepts data from an XML
