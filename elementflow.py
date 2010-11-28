@@ -159,8 +159,7 @@ class IndentingGenerator(NamespacedGenerator):
             indent = u'  ' * len(self.stack)
         width = max(20, 70 - len(indent))
         tw = textwrap.TextWrapper(width=width, initial_indent=indent, subsequent_indent=indent)
-        value = u'\n%s' % tw.fill(value)
-        return value
+        return u'\n%s' % tw.fill(value)
 
     def __exit__(self, *args, **kwargs):
         self.file.write(u'\n%s' % (u'  ' * (len(self.stack) - 1)))
