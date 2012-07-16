@@ -11,5 +11,5 @@ setup(
     url = 'https://launchpad.net/elementflow',
     license = 'LICENSE.txt',
     description = 'Python library for generating XML as a stream without first building a tree in memory.',
-    long_description = open('README.txt').read(),
+    long_description = open('README.md').read(),
 )
