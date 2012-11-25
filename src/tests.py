@@ -118,7 +118,7 @@ class XML(unittest.TestCase):
         with elementflow.xml(buffer, u'root', indent = True) as xml:
             with xml.container(u'a'):
                 xml.element(u'b', text = ''.join(['blah '] * 20))
-                xml.comment(' '.join(['comment'] * 20))
+                xml.comment(u' '.join(['comment'] * 20))
         buffer.seek(0)
         self.assertEqual(
             buffer.getvalue(),
@@ -143,7 +143,7 @@ class XML(unittest.TestCase):
         with elementflow.xml(buffer, u'root', indent = True, text_wrap = False) as xml:
             with xml.container(u'a'):
                 xml.element(u'b', text = ''.join(['blah '] * 20))
-                xml.comment(' '.join(['comment'] * 20))
+                xml.comment(u' '.join(['comment'] * 20))
         buffer.seek(0)
         self.assertEqual(
             buffer.getvalue(),
