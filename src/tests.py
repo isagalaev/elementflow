@@ -43,6 +43,26 @@ class XML(unittest.TestCase):
         # root element
         self.assertRaises(SyntaxError, lambda: ET.parse(buffer))
 
+    def test_comment(self):
+        buffer = StringIO()
+        with elementflow.xml(buffer, u'root') as xml:
+            xml.comment(u'comment')
+        buffer.seek(0)
+        self.assertEqual(
+            buffer.getvalue(),
+            '<?xml version="1.0" encoding="utf-8"?><root><!--comment--></root>'
+        )
+
+    def test_comment_with_double_hyphen(self):
+        buffer = StringIO()
+        with elementflow.xml(buffer, u'root') as xml:
+            xml.comment(u'--comm-->ent--')
+        buffer.seek(0)
+        self.assertEqual(
+            buffer.getvalue(),
+            '<?xml version="1.0" encoding="utf-8"?><root><!--comm>ent--></root>'
+        )
+
     def test_namespaces(self):
         buffer = StringIO()
         with elementflow.xml(buffer, 'root', namespaces={'': 'urn:n', 'n1': 'urn:n1'}) as xml:
@@ -98,6 +118,7 @@ class XML(unittest.TestCase):
         with elementflow.xml(buffer, u'root', indent = True) as xml:
             with xml.container(u'a'):
                 xml.element(u'b', text = ''.join(['blah '] * 20))
+                xml.comment(' '.join(['comment'] * 20))
         buffer.seek(0)
         self.assertEqual(
             buffer.getvalue(),
@@ -108,6 +129,11 @@ class XML(unittest.TestCase):
       blah blah blah blah blah blah blah blah blah blah blah
       blah blah blah blah blah blah blah blah blah
     </b>
+    <!--
+      comment comment comment comment comment comment comment
+      comment comment comment comment comment comment comment
+      comment comment comment comment comment comment
+    -->
   </a>
 </root>
 """)
@@ -117,6 +143,7 @@ class XML(unittest.TestCase):
         with elementflow.xml(buffer, u'root', indent = True, text_wrap = False) as xml:
             with xml.container(u'a'):
                 xml.element(u'b', text = ''.join(['blah '] * 20))
+                xml.comment(' '.join(['comment'] * 20))
         buffer.seek(0)
         self.assertEqual(
             buffer.getvalue(),
@@ -124,6 +151,7 @@ class XML(unittest.TestCase):
 <root>
   <a>
     <b>blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah </b>
+    <!--comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment-->
   </a>
 </root>
 """)

@@ -45,6 +45,11 @@ def attr_str(attrs):
         return u''
     return u''.join([u' %s=%s' % (k, quoteattr(v)) for k, v in attrs.iteritems()])
 
+def escape_comment(value):
+    if '--' in value:
+        value = value.replace('--','')
+    return value
+
 
 class XMLGenerator(object):
     '''
@@ -96,6 +101,12 @@ class XMLGenerator(object):
         Generates a text in currently open container.
         '''
         self.file.write(escape(value))
+
+    def comment(self, value):
+        '''
+        Adds a comment to the xml
+        '''
+        self.file.write(u'<!--%s-->' % escape_comment(value))
 
     def map(self, func, sequence):
         '''
@@ -154,6 +165,14 @@ class IndentingGenerator(NamespacedGenerator):
         self._text_wrap = kwargs.pop('text_wrap', True)
         super(IndentingGenerator, self).__init__(*args, **kwargs)
 
+    def _value_formatter(self, value):
+        indent = u'  ' * len(self.stack)
+        self.file.write(u'\n%s' % indent)
+        if len(value) > 70 and self._text_wrap:
+            fill = self._fill(value, indent + u'  ')
+            value = u'%s\n%s' % (fill, indent)
+        return value
+
     def _fill(self, value, indent=None):
         if indent is None:
             indent = u'  ' * len(self.stack)
@@ -172,16 +191,15 @@ class IndentingGenerator(NamespacedGenerator):
         return super(IndentingGenerator, self).container(*args, **kwargs)
 
     def element(self, name, attrs={}, namespaces={}, text=u''):
-        indent = u'  ' * len(self.stack)
-        self.file.write(u'\n%s' % indent)
-        if len(text) > 70 and self._text_wrap:
-            fill = self._fill(text, indent + u'  ')
-            text = u'%s\n%s' % (fill, indent)
+        text = self._value_formatter(text)
         return super(IndentingGenerator, self).element(name, attrs, namespaces, text)
 
     def text(self, value):
         super(IndentingGenerator, self).text(self._fill(value))
 
+    def comment(self, value):
+        value = self._value_formatter(escape_comment(value))
+        return super(IndentingGenerator, self).comment(value)
 
 class Queue(object):
     '''
