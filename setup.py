@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name = 'elementflow',
-    version = '0.4.1',
+    version = '0.4.2',
     author = 'Ivan Sagalaev',
     author_email = 'Maniac@SoftwareManiacs.Org',
     package_dir = {'': 'src'},

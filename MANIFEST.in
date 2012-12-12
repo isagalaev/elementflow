@@ -1,5 +1,5 @@
 include *.txt
 include tests.py
 
-README.md
-AUTHORS
+include README.md
+include AUTHORS
