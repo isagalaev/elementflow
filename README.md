@@ -1,5 +1,7 @@
 # elementflow
 
+[![Build Status](https://travis-ci.org/isagalaev/elementflow.png)](https://travis-ci.org/isagalaev/elementflow])
+
 Elementflow is a Python library for generating XML as a stream. Some existing
 XML producing libraries (like ElementTree, lxml) build a whole XML tree in
 memory and then serialize it. It might be inefficient for moderately large XML
