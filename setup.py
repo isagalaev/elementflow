@@ -12,4 +12,5 @@ setup(
     license = 'LICENSE.txt',
     description = 'Python library for generating XML as a stream without first building a tree in memory.',
     long_description = open('README.md').read(),
+    test_suite='runtests.runtests',
 )
