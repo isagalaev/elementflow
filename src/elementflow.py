@@ -29,6 +29,7 @@ Pretty-printing::
 '''
 import textwrap
 import codecs
+import six
 
 def escape(value):
     if '&' not in value and '<' not in value:
@@ -43,7 +44,7 @@ def quoteattr(value):
 def attr_str(attrs):
     if not attrs:
         return u''
-    return u''.join([u' %s=%s' % (k, quoteattr(v)) for k, v in attrs.iteritems()])
+    return u''.join([u' %s=%s' % (k, quoteattr(v)) for k, v in six.iteritems(attrs)])
 
 class XMLGenerator(object):
     '''
@@ -125,7 +126,7 @@ class NamespacedGenerator(XMLGenerator):
         prefixes = self.namespaces[-1]
         if namespaces:
             prefixes |= set(namespaces.keys())
-        names = [n for n in [name] + attrs.keys() if ':' in n]
+        names = [n for n in [name] + list(attrs.keys()) if ':' in n]
         for name in names:
             prefix = name.split(':')[0]
             if prefix not in prefixes:
@@ -133,7 +134,7 @@ class NamespacedGenerator(XMLGenerator):
         if namespaces:
             namespaces = dict([
                 (u'xmlns:%s' % k if k else u'xmlns', v)
-                for k, v in namespaces.iteritems()
+                for k, v in six.iteritems(namespaces)
             ])
             attrs = dict(attrs, **namespaces)
         return attrs, prefixes
