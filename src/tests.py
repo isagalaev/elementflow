@@ -1,15 +1,23 @@
 # -*- coding:utf-8 -*-
 from __future__ import with_statement
 
+import six
 import unittest
-from cStringIO import StringIO
+from io import BytesIO
 import xml.etree.cElementTree as ET
 
 import elementflow
 
+
+def _bytes(value):
+    if six.PY2:
+        return value
+    return bytes(value, encoding='utf-8')
+
+
 class XML(unittest.TestCase):
     def test_xml(self):
-        buffer = StringIO()
+        buffer = BytesIO()
         with elementflow.xml(buffer, u'root') as xml:
             with xml.container(u'container', {u'key': u'"значение"'}):
                 xml.text(u'<Текст> контейнера')
@@ -17,21 +25,24 @@ class XML(unittest.TestCase):
             xml.element(u'item', text=u'Текст')
         buffer.seek(0)
         tree = ET.parse(buffer)
-        buffer = StringIO()
+        buffer = BytesIO()
         tree.write(buffer, encoding='utf-8')
         self.assertEqual(
-          buffer.getvalue(),
-          '<root>'
-            '<container key="&quot;значение&quot;">'
-              '&lt;Текст&gt; контейнера'
-              '<item />'
-            '</container>'
-            '<item>Текст</item>'
-          '</root>'
+            buffer.getvalue(),
+            _bytes(
+                '<root>'
+                '<container key="&quot;значение&quot;">'
+                  '&lt;Текст&gt; контейнера'
+                  '<item />'
+                '</container>'
+                '<item>Текст</item>'
+                '</root>'
+            )
         )
 
+
     def test_non_well_formed_on_exception(self):
-        buffer = StringIO()
+        buffer = BytesIO()
         try:
             with elementflow.xml(buffer, u'root') as xml:
                 xml.text(u'Text')
@@ -44,27 +55,27 @@ class XML(unittest.TestCase):
         self.assertRaises(SyntaxError, lambda: ET.parse(buffer))
 
     def test_comment(self):
-        buffer = StringIO()
+        buffer = BytesIO()
         with elementflow.xml(buffer, u'root') as xml:
             xml.comment(u'comment')
         buffer.seek(0)
         self.assertEqual(
             buffer.getvalue(),
-            '<?xml version="1.0" encoding="utf-8"?><root><!--comment--></root>'
+            _bytes('<?xml version="1.0" encoding="utf-8"?><root><!--comment--></root>')
         )
 
     def test_comment_with_double_hyphen(self):
-        buffer = StringIO()
+        buffer = BytesIO()
         with elementflow.xml(buffer, u'root') as xml:
             xml.comment(u'--comm-->ent--')
         buffer.seek(0)
         self.assertEqual(
             buffer.getvalue(),
-            '<?xml version="1.0" encoding="utf-8"?><root><!--comm>ent--></root>'
+            _bytes('<?xml version="1.0" encoding="utf-8"?><root><!--comm>ent--></root>')
         )
 
     def test_namespaces(self):
-        buffer = StringIO()
+        buffer = BytesIO()
         with elementflow.xml(buffer, 'root', namespaces={'': 'urn:n', 'n1': 'urn:n1'}) as xml:
             xml.element('item')
             with xml.container('n2:item', namespaces={'n2': 'urn:n2'}):
@@ -79,7 +90,7 @@ class XML(unittest.TestCase):
         self.assertNotEqual(root.find('{urn:n2}item/{urn:n1}item'), None)
 
     def test_bad_namespace(self):
-        buffer = StringIO()
+        buffer = BytesIO()
         def g():
             with elementflow.xml(buffer, 'n1:root', namespaces={'n': 'urn:n'}) as xml:
                 pass
@@ -91,30 +102,32 @@ class XML(unittest.TestCase):
 
     def test_map(self):
         data = [(1, u'One'), (2, u'Two'), (3, u'Three')]
-        buffer = StringIO()
+        buffer = BytesIO()
         with elementflow.xml(buffer, u'root') as xml:
-            xml.map(lambda (k, v): (
+            xml.map(lambda item: (
                 'item',
-                {'key': unicode(k)},
-                v,
+                {'key': str(item[0])},
+                item[1],
             ), data)
-            xml.map(lambda (k, v): (v,), data)
+            xml.map(lambda item: (item[1],), data)
         buffer.seek(0)
         tree = ET.parse(buffer)
-        buffer = StringIO()
+        buffer = BytesIO()
         tree.write(buffer, encoding='utf-8')
         self.assertEqual(
           buffer.getvalue(),
-          '<root>'
-            '<item key="1">One</item>'
-            '<item key="2">Two</item>'
-            '<item key="3">Three</item>'
-            '<One /><Two /><Three />'
-          '</root>'
+          _bytes(
+              '<root>'
+                '<item key="1">One</item>'
+                '<item key="2">Two</item>'
+                '<item key="3">Three</item>'
+                '<One /><Two /><Three />'
+              '</root>'
+          )
         )
 
     def test_indent(self):
-        buffer = StringIO()
+        buffer = BytesIO()
         with elementflow.xml(buffer, u'root', indent = True) as xml:
             with xml.container(u'a'):
                 xml.element(u'b', text = ''.join(['blah '] * 20))
@@ -122,6 +135,7 @@ class XML(unittest.TestCase):
         buffer.seek(0)
         self.assertEqual(
             buffer.getvalue(),
+            _bytes(
 """<?xml version="1.0" encoding="utf-8"?>
 <root>
   <a>
@@ -136,10 +150,10 @@ class XML(unittest.TestCase):
     -->
   </a>
 </root>
-""")
+"""))
 
     def test_indent_nowrap(self):
-        buffer = StringIO()
+        buffer = BytesIO()
         with elementflow.xml(buffer, u'root', indent = True, text_wrap = False) as xml:
             with xml.container(u'a'):
                 xml.element(u'b', text = ''.join(['blah '] * 20))
@@ -147,6 +161,7 @@ class XML(unittest.TestCase):
         buffer.seek(0)
         self.assertEqual(
             buffer.getvalue(),
+            _bytes(
 """<?xml version="1.0" encoding="utf-8"?>
 <root>
   <a>
@@ -154,7 +169,7 @@ class XML(unittest.TestCase):
     <!--comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment comment-->
   </a>
 </root>
-""")
+"""))
 
 
 

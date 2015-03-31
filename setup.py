@@ -8,6 +8,7 @@ setup(
     author_email = 'Maniac@SoftwareManiacs.Org',
     package_dir = {'': 'src'},
     py_modules = ['elementflow'],
+    install_requires=['six'],
     url = 'https://github.com/isagalaev/elementflow',
     license = 'LICENSE.txt',
     description = 'Python library for generating XML as a stream without first building a tree in memory.',
