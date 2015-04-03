@@ -84,7 +84,7 @@ class XML(unittest.TestCase):
         buffer.seek(0)
         tree = ET.parse(buffer)
         root = tree.getroot()
-        self.assertEquals(root.tag, '{urn:n}root')
+        self.assertEqual(root.tag, '{urn:n}root')
         self.assertNotEqual(root.find('{urn:n}item'), None)
         self.assertNotEqual(root.find('{urn:n2}item/{urn:n}item'), None)
         self.assertNotEqual(root.find('{urn:n2}item/{urn:n1}item'), None)
