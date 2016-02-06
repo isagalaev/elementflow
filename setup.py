@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'elementflow',
-    version = '0.4.2',
+    version = '0.5',
     author = 'Ivan Sagalaev',
     author_email = 'maniac@softwaremaniacs.org',
     url = 'https://github.com/isagalaev/elementflow',
